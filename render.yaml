@@ -20,10 +20,6 @@ services:
       - key: JAVA_TOOL_OPTIONS
         value: "-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0"
     healthCheckPath: /actuator/health
-    disk:
-      name: data
-      mountPath: /data
-      sizeGB: 1
 
   # Frontend service
   - type: web
