@@ -1,0 +1,108 @@
+version: '3.8'
+
+services:
+  postgres-dev:
+    image: postgres:15-alpine
+    container_name: oppfinder-postgres-dev
+    environment:
+      POSTGRES_USER: oppfinder_dev
+      POSTGRES_PASSWORD: devpass123
+      POSTGRES_DB: oppfinder_discovery_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-dev-data:/var/lib/postgresql/data
+      - ./docker/postgres/init-dev.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U oppfinder_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis-dev:
+    image: redis:7-alpine
+    container_name: oppfinder-redis-dev
+    command: redis-server --requirepass redis_dev_123
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-dev-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  kafka-dev:
+    image: confluentinc/cp-kafka:latest
+    container_name: oppfinder-kafka-dev
+    depends_on:
+      - zookeeper-dev
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper-dev:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    volumes:
+      - kafka-dev-data:/var/lib/kafka/data
+
+  zookeeper-dev:
+    image: confluentinc/cp-zookeeper:latest
+    container_name: oppfinder-zookeeper-dev
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    volumes:
+      - zookeeper-dev-data:/var/lib/zookeeper/data
+
+  # Development tools
+  pgadmin-dev:
+    image: dpage/pgadmin4:latest
+    container_name: oppfinder-pgadmin-dev
+    environment:
+      PGADMIN_DEFAULT_EMAIL: dev@oppfinder.com
+      PGADMIN_DEFAULT_PASSWORD: devadmin123
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "8081:80"
+    depends_on:
+      - postgres-dev
+
+  redis-commander-dev:
+    image: rediscommander/redis-commander:latest
+    container_name: oppfinder-redis-commander-dev
+    environment:
+      REDIS_HOSTS: local:redis-dev:6379:0:redis_dev_123
+    ports:
+      - "8082:8081"
+    depends_on:
+      - redis-dev
+
+  kafka-ui-dev:
+    image: provectuslabs/kafka-ui:latest
+    container_name: oppfinder-kafka-ui-dev
+    ports:
+      - "8080:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka-dev:9092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper-dev:2181
+    depends_on:
+      - kafka-dev
+      - zookeeper-dev
+
+volumes:
+  postgres-dev-data:
+  redis-dev-data:
+  kafka-dev-data:
+  zookeeper-dev-data:
+
+networks:
+  default:
+    name: oppfinder-dev
+    driver: bridge

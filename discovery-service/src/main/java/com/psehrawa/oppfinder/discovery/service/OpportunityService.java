@@ -9,6 +9,9 @@ import com.psehrawa.oppfinder.discovery.mapper.OpportunityMapper;
 import com.psehrawa.oppfinder.discovery.repository.OpportunityRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -32,6 +35,10 @@ public class OpportunityService {
     private final OpportunityMapper opportunityMapper;
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
+    @Caching(evict = {
+        @CacheEvict(value = "searchResults", allEntries = true),
+        @CacheEvict(value = "trendingOpportunities", allEntries = true)
+    })
     public OpportunityDto saveOpportunity(OpportunityDto opportunityDto) {
         log.debug("Saving opportunity: {}", opportunityDto.getTitle());
 
@@ -62,6 +69,7 @@ public class OpportunityService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "searchResults", key = "#criteria.hashCode()")
     public Page<OpportunityDto> searchOpportunities(OpportunitySearchCriteria criteria) {
         log.debug("Searching opportunities with criteria: {}", criteria);
 
@@ -87,6 +95,7 @@ public class OpportunityService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "opportunityById", key = "#id")
     public Optional<OpportunityDto> findById(Long id) {
         return opportunityRepository.findById(id)
             .map(opportunityMapper::toDto);
@@ -103,6 +112,7 @@ public class OpportunityService {
         return opportunityRepository.existsBySourceAndExternalId(source, externalId);
     }
 
+    @CacheEvict(value = "opportunityById", key = "#id")
     public OpportunityDto updateOpportunityStatus(Long id, OpportunityStatus status) {
         log.debug("Updating opportunity {} status to {}", id, status);
 
@@ -118,6 +128,7 @@ public class OpportunityService {
         return result;
     }
 
+    @CacheEvict(value = "opportunityById", key = "#id")
     public OpportunityDto updateOpportunityScore(Long id, BigDecimal score) {
         log.debug("Updating opportunity {} score to {}", id, score);
 
@@ -142,6 +153,7 @@ public class OpportunityService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "trendingOpportunities", key = "#minScore + '-' + #since + '-' + #pageable.getPageNumber()")
     public Page<OpportunityDto> findTrendingOpportunities(BigDecimal minScore, LocalDateTime since, Pageable pageable) {
         return opportunityRepository.findTrendingOpportunities(minScore, since, pageable)
             .map(opportunityMapper::toDto);

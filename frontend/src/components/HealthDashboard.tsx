@@ -158,40 +158,48 @@ const HealthDashboard: React.FC = () => {
               </div>
 
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Enabled Sources:</span>
+                <span className="text-sm text-gray-600">Data Sources:</span>
                 <span className="text-sm font-medium text-gray-900">
-                  {discoveryHealth.enabledSources.length}
+                  {Object.keys(discoveryHealth.dataSources || {}).length}
                 </span>
               </div>
 
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Last Updated:</span>
-                <span className="text-xs text-gray-500">
-                  {formatDateTime(discoveryHealth.timestamp)}
-                </span>
-              </div>
+              {discoveryHealth.lastDiscovery && (
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Last Discovery:</span>
+                  <span className="text-xs text-gray-500">
+                    {formatDateTime(discoveryHealth.lastDiscovery)}
+                  </span>
+                </div>
+              )}
+
+              {discoveryHealth.totalOpportunities !== undefined && (
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Total Opportunities:</span>
+                  <span className="text-sm font-medium text-gray-900">
+                    {discoveryHealth.totalOpportunities}
+                  </span>
+                </div>
+              )}
 
               {/* Data Sources Health */}
               <div className="space-y-2">
                 <h4 className="text-sm font-medium text-gray-700">Data Sources:</h4>
-                {Object.entries(discoveryHealth.dataSourcesHealth).map(([source, health]) => (
+                {Object.entries(discoveryHealth.dataSources || {}).map(([source, status]) => (
                   <div key={source} className="p-2 bg-gray-50 rounded-md">
                     <div className="flex justify-between items-center mb-1">
                       <div className="flex items-center space-x-2">
-                        {getStatusIcon(health.status)}
+                        {getStatusIcon(status || 'unknown')}
                         <span className="text-sm font-medium text-gray-700">
                           {source.replace(/_/g, ' ')}
                         </span>
                       </div>
-                      <span className={`text-xs font-medium ${getStatusColor(health.status)}`}>
-                        {health.status}
+                      <span className={`text-xs font-medium ${getStatusColor(status || 'unknown')}`}>
+                        {status || 'UNKNOWN'}
                       </span>
                     </div>
                     <div className="text-xs text-gray-600">
-                      {health.message}
-                    </div>
-                    <div className="text-xs text-gray-500 mt-1">
-                      Last checked: {formatDateTime(health.lastChecked)}
+                      Status: {status || 'Unknown'}
                     </div>
                   </div>
                 ))}
@@ -259,7 +267,7 @@ const HealthDashboard: React.FC = () => {
                 Active Sources
               </p>
               <p className="text-sm text-gray-600">
-                {discoveryHealth?.enabledSources.length || 0} enabled
+                {Object.keys(discoveryHealth?.dataSources || {}).length} enabled
               </p>
             </div>
           </div>

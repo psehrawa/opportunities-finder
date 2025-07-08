@@ -53,7 +53,7 @@ const Header: React.FC = () => {
               <div className="flex items-center space-x-2">
                 <span className="text-sm text-gray-500">Sources:</span>
                 <span className="text-sm font-medium text-gray-900">
-                  {discoveryHealth.enabledSources?.length || 0}
+                  {Object.keys(discoveryHealth.dataSources || {}).length}
                 </span>
               </div>
             )}

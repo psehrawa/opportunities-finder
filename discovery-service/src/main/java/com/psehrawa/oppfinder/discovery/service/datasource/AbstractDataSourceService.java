@@ -68,28 +68,40 @@ public abstract class AbstractDataSourceService implements DataSourceService {
 
     @Override
     public RateLimitStatus getRateLimitStatus() {
-        String key = "rate_limit:" + getDataSource().name();
-        String requestsKey = key + ":requests";
-        String resetKey = key + ":reset";
+        try {
+            String key = "rate_limit:" + getDataSource().name();
+            String requestsKey = key + ":requests";
+            String resetKey = key + ":reset";
 
-        Object requestsObj = redisTemplate.opsForValue().get(requestsKey);
-        Object resetObj = redisTemplate.opsForValue().get(resetKey);
-        
-        Integer requestsRemaining = requestsObj instanceof Number ? ((Number) requestsObj).intValue() : null;
-        Long resetTimestamp = resetObj instanceof Number ? ((Number) resetObj).longValue() : null;
+            Object requestsObj = redisTemplate.opsForValue().get(requestsKey);
+            Object resetObj = redisTemplate.opsForValue().get(resetKey);
+            
+            Integer requestsRemaining = requestsObj instanceof Number ? ((Number) requestsObj).intValue() : null;
+            Long resetTimestamp = resetObj instanceof Number ? ((Number) resetObj).longValue() : null;
 
-        int limit = getRequestsPerHour();
-        int remaining = requestsRemaining != null ? requestsRemaining : limit;
-        LocalDateTime resetTime = resetTimestamp != null ? 
-            LocalDateTime.now().plusSeconds(resetTimestamp) : 
-            LocalDateTime.now().plusHours(1);
+            int limit = getRequestsPerHour();
+            int remaining = requestsRemaining != null ? requestsRemaining : limit;
+            LocalDateTime resetTime = resetTimestamp != null ? 
+                LocalDateTime.now().plusSeconds(resetTimestamp) : 
+                LocalDateTime.now().plusHours(1);
 
-        return new RateLimitStatus(
-            remaining,
-            limit,
-            resetTime,
-            remaining <= 0
-        );
+            return new RateLimitStatus(
+                remaining,
+                limit,
+                resetTime,
+                remaining <= 0
+            );
+        } catch (Exception e) {
+            log.debug("Rate limit check failed (Redis not available): {}", e.getMessage());
+            // Return unlimited rate limit status when Redis is not available
+            int limit = getRequestsPerHour();
+            return new RateLimitStatus(
+                limit,
+                limit,
+                LocalDateTime.now().plusHours(1),
+                false
+            );
+        }
     }
 
     @Override
@@ -166,21 +178,26 @@ public abstract class AbstractDataSourceService implements DataSourceService {
      * Update rate limit tracking after making a request
      */
     protected void updateRateLimitTracking() {
-        String key = "rate_limit:" + getDataSource().name();
-        String requestsKey = key + ":requests";
-        String resetKey = key + ":reset";
+        try {
+            String key = "rate_limit:" + getDataSource().name();
+            String requestsKey = key + ":requests";
+            String resetKey = key + ":reset";
 
-        // Decrement requests remaining
-        Long remaining = redisTemplate.opsForValue().decrement(requestsKey);
-        
-        // Set initial values if not exists
-        if (remaining == null || remaining.longValue() == -1) {
-            int hourlyLimit = getRequestsPerHour();
-            redisTemplate.opsForValue().set(requestsKey, hourlyLimit - 1);
-            redisTemplate.expire(requestsKey, Duration.ofHours(1));
+            // Decrement requests remaining
+            Long remaining = redisTemplate.opsForValue().decrement(requestsKey);
             
-            redisTemplate.opsForValue().set(resetKey, 3600); // 1 hour in seconds
-            redisTemplate.expire(resetKey, Duration.ofHours(1));
+            // Set initial values if not exists
+            if (remaining == null || remaining.longValue() == -1) {
+                int hourlyLimit = getRequestsPerHour();
+                redisTemplate.opsForValue().set(requestsKey, hourlyLimit - 1);
+                redisTemplate.expire(requestsKey, Duration.ofHours(1));
+                
+                redisTemplate.opsForValue().set(resetKey, 3600); // 1 hour in seconds
+                redisTemplate.expire(resetKey, Duration.ofHours(1));
+            }
+        } catch (Exception e) {
+            log.debug("Rate limit tracking update failed (Redis not available): {}", e.getMessage());
+            // Skip rate limit tracking when Redis is not available
         }
     }
 

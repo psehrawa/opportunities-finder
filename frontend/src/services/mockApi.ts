@@ -172,6 +172,18 @@ export class MockApiService {
     
     return {
       content: mockOpportunities,
+      pageable: {
+        pageNumber: 0,
+        pageSize: 20,
+        sort: {
+          empty: true,
+          unsorted: true,
+          sorted: false
+        },
+        offset: 0,
+        paged: true,
+        unpaged: false
+      },
       totalElements: mockOpportunities.length,
       totalPages: 1,
       size: 20,

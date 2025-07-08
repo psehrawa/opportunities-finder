@@ -1,0 +1,94 @@
+server:
+  port: 8090
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-stacktrace: on_param
+
+spring:
+  profiles:
+    active: dev
+    
+  datasource:
+    url: jdbc:postgresql://localhost:5432/oppfinder_discovery_dev
+    username: oppfinder_dev
+    password: devpass123
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 20000
+      
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+        
+  redis:
+    host: localhost
+    port: 6379
+    password: redis_dev_123
+    timeout: 5s
+    
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: discovery-service-dev
+      auto-offset-reset: earliest
+      
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=1000,expireAfterWrite=1m
+      
+# Development security (less restrictive)
+jwt:
+  secret: dev-secret-key-for-jwt-token-generation-minimum-256-bits
+  expiration: 604800000 # 7 days
+
+# Development rate limiting (more permissive)
+rate-limiting:
+  enabled: true
+  requests-per-minute: 1000
+  premium-requests-per-minute: 5000
+
+# Development logging (verbose)
+logging:
+  level:
+    root: INFO
+    com.psehrawa.oppfinder: DEBUG
+    org.springframework.web: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %highlight(%-5level) %cyan(%logger{36}) - %msg%n"
+
+# Development features
+oppfinder:
+  features:
+    mock-external-apis: false
+    enable-debug-endpoints: true
+    allow-cors-all: true
+  
+# Development monitoring
+sentry:
+  enabled: false
+  
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+      
+# Development backup settings
+backup:
+  enabled: false
+  directory: ./dev-backups
+  retention:
+    days: 7

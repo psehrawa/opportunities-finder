@@ -1,0 +1,112 @@
+server:
+  port: ${PORT:8090}
+  error:
+    include-message: always
+    include-binding-errors: never
+    include-stacktrace: never
+
+spring:
+  profiles:
+    active: staging
+    
+  datasource:
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        jdbc:
+          batch_size: 25
+        order_inserts: true
+        order_updates: true
+        
+  redis:
+    host: ${REDIS_HOST}
+    port: ${REDIS_PORT:6379}
+    password: ${REDIS_PASSWORD}
+    ssl: ${REDIS_SSL:true}
+    timeout: 10s
+    lettuce:
+      pool:
+        max-active: 10
+        max-idle: 5
+        min-idle: 2
+        
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+    producer:
+      retries: 2
+      acks: 1
+      compression-type: gzip
+      
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=5000,expireAfterWrite=5m
+      
+# Staging security
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: 86400000 # 24 hours
+
+# Staging rate limiting
+rate-limiting:
+  enabled: true
+  requests-per-minute: 200
+  premium-requests-per-minute: 2000
+
+# Staging logging
+logging:
+  level:
+    root: INFO
+    com.psehrawa.oppfinder: INFO
+    org.springframework.security: WARN
+  pattern:
+    console: "%d{ISO8601} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: ${LOG_FILE:/var/log/oppfinder/staging-discovery.log}
+    max-size: 50MB
+    max-history: 14
+
+# Staging monitoring
+sentry:
+  dsn: ${SENTRY_DSN}
+  environment: staging
+  traces-sample-rate: 0.2
+  enable-tracing: true
+  
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /management
+  endpoint:
+    health:
+      show-details: when-authorized
+      
+# Staging backup settings
+backup:
+  enabled: true
+  directory: ${BACKUP_DIRECTORY:/data/staging-backups}
+  retention:
+    days: 14
+  schedule:
+    cron: "0 0 3 * * *" # 3 AM daily
+
+# Staging feature flags
+oppfinder:
+  features:
+    enable-new-features: true
+    enable-beta-apis: true
+    maintenance-mode: false

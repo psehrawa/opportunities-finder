@@ -81,6 +81,14 @@ management:
       prometheus:
         enabled: true
 
+# Sentry Configuration
+sentry:
+  dsn: ${SENTRY_DSN:}
+  environment: ${SPRING_PROFILES_ACTIVE:development}
+  traces-sample-rate: 0.1
+  enable-tracing: true
+  send-default-pii: false
+
 logging:
   level:
     com.psehrawa.oppfinder: DEBUG
@@ -108,9 +116,12 @@ oppfinder:
       reddit:
         enabled: true
         api-key: ${REDDIT_API_KEY:}
+        user-agent: ${REDDIT_USER_AGENT:OpportunityFinder/1.0 (by /u/your_username)}
         rate-limit:
           requests-per-hour: 100
           burst-capacity: 10
+          retry-delay-seconds: 60
+          max-retries: 3
       blind:
         enabled: true
         api-key: ${BLIND_API_KEY:}

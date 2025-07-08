@@ -1,0 +1,111 @@
+server:
+  port: ${PORT:8090}
+  compression:
+    enabled: true
+    mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json
+    min-response-size: 1024
+
+spring:
+  datasource:
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
+    hikari:
+      maximum-pool-size: 30
+      minimum-idle: 10
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        jdbc:
+          batch_size: 50
+        order_inserts: true
+        order_updates: true
+        
+  redis:
+    host: ${REDIS_HOST}
+    port: ${REDIS_PORT:6379}
+    password: ${REDIS_PASSWORD}
+    ssl: ${REDIS_SSL:false}
+    timeout: 10s
+    lettuce:
+      pool:
+        max-active: 20
+        max-idle: 10
+        min-idle: 5
+        
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+    producer:
+      retries: 3
+      acks: all
+      compression-type: snappy
+      
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=10000,expireAfterWrite=5m
+      
+# Sentry for production monitoring
+sentry:
+  dsn: ${SENTRY_DSN}
+  environment: production
+  traces-sample-rate: 0.1
+  enable-tracing: true
+  send-default-pii: false
+  
+# Security
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: 86400000 # 24 hours
+
+# Rate limiting
+rate-limiting:
+  enabled: true
+  requests-per-minute: 100
+  premium-requests-per-minute: 1000
+
+# Backup configuration
+backup:
+  enabled: true
+  directory: ${BACKUP_DIRECTORY:/data/backups}
+  retention:
+    days: 30
+  schedule:
+    cron: "0 0 2 * * *" # 2 AM daily
+
+# Logging
+logging:
+  level:
+    root: WARN
+    com.psehrawa.oppfinder: INFO
+  pattern:
+    console: "%d{ISO8601} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: ${LOG_FILE:/var/log/oppfinder/discovery.log}
+    max-size: 100MB
+    max-history: 30
+
+# Management endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /management
+  endpoint:
+    health:
+      show-details: when-authorized
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+      environment: production

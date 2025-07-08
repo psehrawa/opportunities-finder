@@ -64,7 +64,9 @@ export type DataSource =
   | 'CRUNCHBASE_PRO'
   | 'PITCHBOOK'
   | 'OWLER'
-  | 'ANGELLIST';
+  | 'ANGELLIST'
+  | 'BLIND'
+  | 'QUORA';
 
 export type FundingStage = 
   | 'PRE_SEED'
@@ -114,6 +116,8 @@ export interface Opportunity {
   lastUpdated: string;
   isActive: boolean;
   version: number;
+  metadata?: { [key: string]: string };
+  tags?: string[];
 }
 
 // Health Check Types
@@ -135,12 +139,12 @@ export interface DataSourceHealth {
 }
 
 export interface DiscoveryHealth {
-  dataSourcesHealth: {
-    [key in DataSource]?: DataSourceHealth;
+  status: 'UP' | 'DOWN' | 'DEGRADED';
+  dataSources: {
+    [key in DataSource]?: 'HEALTHY' | 'UNHEALTHY' | 'UNKNOWN';
   };
-  status: 'HEALTHY' | 'DEGRADED' | 'DOWN';
-  enabledSources: DataSource[];
-  timestamp: string;
+  lastDiscovery?: string;
+  totalOpportunities?: number;
 }
 
 // Search and Filter Types
