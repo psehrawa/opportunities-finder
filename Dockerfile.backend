@@ -1,0 +1,42 @@
+# Multi-stage build for Spring Boot application
+FROM gradle:8-jdk17-alpine AS build
+
+WORKDIR /app
+
+# Copy gradle files
+COPY gradle gradle
+COPY gradlew .
+COPY settings.gradle .
+COPY build.gradle .
+
+# Copy source code
+COPY common common
+COPY discovery-service discovery-service
+
+# Build application
+RUN ./gradlew :discovery-service:build -x test
+
+# Runtime stage
+FROM openjdk:17-jdk-slim
+
+WORKDIR /app
+
+# Copy the built jar
+COPY --from=build /app/discovery-service/build/libs/discovery-service-*.jar app.jar
+
+# Add non-root user
+RUN addgroup --system spring && adduser --system spring --ingroup spring
+USER spring:spring
+
+# Expose port
+EXPOSE 8090
+
+# Set JVM options for container
+ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:InitialRAMPercentage=50.0"
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
+  CMD curl -f http://localhost:8090/actuator/health || exit 1
+
+# Run the application
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]

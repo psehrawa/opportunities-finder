@@ -1,0 +1,26 @@
+FROM openjdk:17-jdk-slim
+
+# Set working directory
+WORKDIR /app
+
+# Copy gradle wrapper and configuration files
+COPY gradle/ gradle/
+COPY gradlew .
+COPY build.gradle .
+COPY settings.gradle .
+
+# Copy source code
+COPY src/ src/
+
+# Build the application
+RUN ./gradlew build -x test
+
+# Expose the port
+EXPOSE 8090
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+  CMD curl -f http://localhost:8090/actuator/health || exit 1
+
+# Run the application
+CMD ["./gradlew", "bootRun"]

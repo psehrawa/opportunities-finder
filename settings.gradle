@@ -1,0 +1,9 @@
+rootProject.name = 'opportunities-finder'
+
+include 'common'
+include 'discovery-service'
+include 'intelligence-service'
+include 'user-service'
+include 'notification-service'
+include 'analytics-service'
+include 'api-gateway'

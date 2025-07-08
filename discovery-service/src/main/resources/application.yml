@@ -1,0 +1,187 @@
+server:
+  port: 8090
+
+spring:
+  application:
+    name: discovery-service
+  
+  profiles:
+    active: dev
+  
+  datasource:
+    url: jdbc:postgresql://localhost:5432/oppfinder_discovery
+    username: oppfinder
+    password: oppfinder123
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      idle-timeout: 300000
+      connection-timeout: 20000
+      max-lifetime: 1200000
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        jdbc:
+          batch_size: 25
+        order_inserts: true
+        order_updates: true
+  
+  redis:
+    host: localhost
+    port: 6379
+    password: redis123
+    database: 0
+    lettuce:
+      pool:
+        max-active: 8
+        max-idle: 8
+        min-idle: 0
+        max-wait: -1ms
+    timeout: 10s
+    connect-timeout: 10s
+    client-type: lettuce
+  
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.add.type.headers: false
+    consumer:
+      group-id: discovery-service
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "com.psehrawa.oppfinder.common.dto"
+  
+  cache:
+    type: simple
+    cache-names: opportunities
+    simple:
+      spec: maximumSize=500,expireAfterWrite=1h
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+logging:
+  level:
+    com.psehrawa.oppfinder: DEBUG
+    org.springframework.kafka: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+# Application-specific configuration
+oppfinder:
+  discovery:
+    data-sources:
+      github:
+        enabled: true
+        api-key: ${GITHUB_API_TOKEN:}
+        rate-limit:
+          requests-per-hour: 5000
+          burst-capacity: 100
+      hacker-news:
+        enabled: true
+        rate-limit:
+          requests-per-hour: 3600
+          burst-capacity: 60
+      reddit:
+        enabled: true
+        api-key: ${REDDIT_API_KEY:}
+        rate-limit:
+          requests-per-hour: 100
+          burst-capacity: 10
+      blind:
+        enabled: true
+        api-key: ${BLIND_API_KEY:}
+        rate-limit:
+          requests-per-hour: 1000
+          burst-capacity: 50
+      quora:
+        enabled: true
+        api-key: ${QUORA_API_KEY:}
+        rate-limit:
+          requests-per-hour: 1000
+          burst-capacity: 50
+    
+    scheduling:
+      discovery-interval: "0 0 */6 * * *" # Every 6 hours
+      cleanup-interval: "0 0 2 * * *"     # Daily at 2 AM
+    
+    scoring:
+      weights:
+        funding-stage: 0.3
+        company-size: 0.2
+        industry-trend: 0.2
+        social-signals: 0.15
+        recency: 0.15
+    
+    kafka:
+      topics:
+        opportunity-discovered: opportunity.discovered
+        opportunity-updated: opportunity.updated
+        opportunity-scored: opportunity.scored
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+  datasource:
+    url: jdbc:postgresql://localhost:5432/oppfinder_discovery
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+
+logging:
+  level:
+    root: INFO
+    com.psehrawa.oppfinder: DEBUG
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+  datasource:
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    password: ${REDIS_PASSWORD:}
+
+app:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:https://oppfinder.vercel.app,https://oppfinder-*.vercel.app,http://localhost:3000}
+
+logging:
+  level:
+    root: WARN
+    com.psehrawa.oppfinder: INFO

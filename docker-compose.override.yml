@@ -1,0 +1,38 @@
+# Development-specific overrides
+services:
+  postgres:
+    environment:
+      POSTGRES_DB: oppfinder_dev
+    volumes:
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
+
+  # Development Discovery Service
+  discovery-service:
+    build:
+      context: ./discovery-service
+      dockerfile: Dockerfile.dev
+    container_name: oppfinder-discovery-dev
+    ports:
+      - "8090:8090"
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/oppfinder_discovery
+      SPRING_DATASOURCE_USERNAME: oppfinder
+      SPRING_DATASOURCE_PASSWORD: oppfinder123
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SPRING_REDIS_PASSWORD: redis123
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - oppfinder-network
+    volumes:
+      - ./discovery-service/src:/app/src:ro
+    profiles:
+      - dev

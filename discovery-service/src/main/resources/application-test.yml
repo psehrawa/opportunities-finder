@@ -1,0 +1,61 @@
+spring:
+  application:
+    name: discovery-service-test
+  
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: 
+  
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+  
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
+      - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
+  
+  cache:
+    type: simple  # Use simple cache for tests
+
+logging:
+  level:
+    com.psehrawa.oppfinder: DEBUG
+    org.springframework.kafka: WARN
+    org.hibernate.SQL: DEBUG
+
+# Test-specific configuration
+oppfinder:
+  discovery:
+    data-sources:
+      github:
+        enabled: true
+        api-key: test-key
+        rate-limit:
+          requests-per-hour: 1000
+          burst-capacity: 100
+      hacker-news:
+        enabled: true
+        rate-limit:
+          requests-per-hour: 3600
+          burst-capacity: 60
+    
+    scoring:
+      weights:
+        funding-stage: 0.25
+        company-size: 0.20
+        industry-trend: 0.20
+        social-signals: 0.15
+        recency: 0.10
+        data-source-reliability: 0.10
+    
+    scheduling:
+      discovery-interval: "0 0 */12 * * *"  # Every 12 hours for tests
+      cleanup-interval: "0 0 3 * * *"       # Daily at 3 AM for tests

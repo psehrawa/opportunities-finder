@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${appName}">TechOpportunity Intelligence Platform</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .api-link {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 10px 15px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 5px;
+            font-size: 14px;
+        }
+        .api-link:hover {
+            background: #5a67d8;
+        }
+        .status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status.running {
+            background: #48bb78;
+            color: white;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1 th:text="${appName}">TechOpportunity Intelligence Platform</h1>
+        <p>Intelligent Discovery & Analysis of Technology Business Opportunities</p>
+        <span class="status running" th:text="${profile}">Development Mode</span>
+    </div>
+
+    <div class="grid">
+        <div class="card">
+            <h3>🔍 Discovery APIs</h3>
+            <p>Access opportunity discovery and health monitoring</p>
+            <a href="/api/v1/discovery/health" class="api-link">Discovery Health</a>
+            <a href="/api/v1/discovery/sources" class="api-link">Data Sources</a>
+        </div>
+
+        <div class="card">
+            <h3>📊 Opportunities APIs</h3>
+            <p>Manage and search business opportunities</p>
+            <a href="/api/v1/opportunities" class="api-link">All Opportunities</a>
+            <a href="/actuator/health" class="api-link">System Health</a>
+        </div>
+
+        <div class="card">
+            <h3>🛠️ Development Tools</h3>
+            <p>Database and monitoring tools</p>
+            <a href="/h2-console" class="api-link">H2 Database Console</a>
+            <a href="/actuator" class="api-link">Actuator Endpoints</a>
+        </div>
+
+        <div class="card">
+            <h3>📋 System Information</h3>
+            <p><strong>Version:</strong> <span th:text="${version}">1.0.0</span></p>
+            <p><strong>Mode:</strong> <span th:text="${profile}">Development</span></p>
+            <p><strong>Database:</strong> H2 In-Memory</p>
+            <p><strong>Port:</strong> 8090</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>🚀 Getting Started</h3>
+        <p>This is a REST API backend service. Use the API endpoints above or integrate with a frontend application.</p>
+        <p><strong>Example API calls:</strong></p>
+        <pre><code>curl http://localhost:8090/api/v1/opportunities
+curl http://localhost:8090/api/v1/discovery/health
+curl http://localhost:8090/actuator/health</code></pre>
+    </div>
+</body>
+</html>

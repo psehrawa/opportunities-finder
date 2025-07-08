@@ -1,0 +1,51 @@
+services:
+  # Backend service
+  - type: web
+    name: oppfinder-backend
+    runtime: docker
+    dockerfilePath: ./Dockerfile.backend
+    plan: free
+    branch: main
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: PORT
+        value: 8090
+      - key: DATABASE_URL
+        fromDatabase:
+          name: oppfinder-db
+          property: connectionString
+      - key: CORS_ALLOWED_ORIGINS
+        value: https://oppfinder-frontend.onrender.com
+      - key: JAVA_TOOL_OPTIONS
+        value: "-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0"
+    healthCheckPath: /actuator/health
+    disk:
+      name: data
+      mountPath: /data
+      sizeGB: 1
+
+  # Frontend service
+  - type: web
+    name: oppfinder-frontend
+    runtime: static
+    plan: free
+    branch: main
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: frontend/build
+    envVars:
+      - key: REACT_APP_API_URL
+        value: https://oppfinder-backend.onrender.com
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+
+databases:
+  - name: oppfinder-db
+    databaseName: oppfinder
+    user: oppfinder
+    plan: free
