@@ -2,11 +2,16 @@ import React, { useState } from 'react';
 import Header from './components/Header';
 import OpportunityList from './components/OpportunityList';
 import HealthDashboard from './components/HealthDashboard';
+import DemoBanner from './components/DemoBanner';
 
 type TabType = 'opportunities' | 'health';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('opportunities');
+  
+  // Check if we're in demo mode
+  const isDemoMode = process.env.REACT_APP_DEMO_MODE === 'true' || 
+                    window.location.hostname.includes('github.io');
 
   const tabs: { key: TabType; label: string; icon: string }[] = [
     {
@@ -34,6 +39,7 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <DemoBanner isDemoMode={isDemoMode} />
       <Header />
       
       {/* Navigation Tabs */}
@@ -83,15 +89,29 @@ const App: React.FC = () => {
               © 2024 TechOpportunity Intelligence Platform
             </p>
             <div className="flex items-center space-x-4 text-sm text-gray-500">
-              <span>API: http://localhost:8090</span>
-              <a
-                href="http://localhost:8090/actuator/health"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-primary-600"
-              >
-                Health Check
-              </a>
+              <span>
+                {isDemoMode ? '🎭 Demo Mode - Sample Data' : 'API: http://localhost:8090'}
+              </span>
+              {!isDemoMode && (
+                <a
+                  href="http://localhost:8090/actuator/health"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-primary-600"
+                >
+                  Health Check
+                </a>
+              )}
+              {isDemoMode && (
+                <a
+                  href="https://github.com/psehrawa/opportunities-finder"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-primary-600"
+                >
+                  View Source Code
+                </a>
+              )}
             </div>
           </div>
         </div>
