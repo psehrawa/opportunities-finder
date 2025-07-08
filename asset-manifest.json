@@ -1,11 +1,11 @@
 {
   "files": {
-    "main.css": "/opportunities-finder/static/css/main.42eb9b23.css",
-    "main.js": "/opportunities-finder/static/js/main.6cb62554.js",
+    "main.css": "/opportunities-finder/static/css/main.3de6b448.css",
+    "main.js": "/opportunities-finder/static/js/main.541e36be.js",
     "index.html": "/opportunities-finder/index.html"
   },
   "entrypoints": [
-    "static/css/main.42eb9b23.css",
-    "static/js/main.6cb62554.js"
+    "static/css/main.3de6b448.css",
+    "static/js/main.541e36be.js"
   ]
 }
